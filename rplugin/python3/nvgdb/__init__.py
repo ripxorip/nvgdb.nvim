@@ -5,18 +5,28 @@
 # ============================================================================
 
 import neovim
+import time
+import threading
 
 from nvgdb.nvgdb import NvGdb
 
 @neovim.plugin
-class NvGdb(object):
+class NvGdbWrapper(object):
     def __init__(self, nvim):
         self.nvim = nvim
-        self.ng = NvGdb()
+        self.ng = NvGdb(nvim)
+
+    def server_wrapper(self):
+        self.ng.serve()
 
     @neovim.command("NvGdbStart", range='', nargs='*', sync=True)
     def NvGdbStart(self, args, range):
-        self.ng.log('Test')
+        t = threading.Thread(target=self.server_wrapper, daemon=True)
+        t.start()
+
+    @neovim.command("NvGdbStop", range='', nargs='*', sync=True)
+    def NvGdbStop(self, args, range):
+        pass
 
     @neovim.command("NvGdbShowLog", range='', nargs='*', sync=True)
     def NvGdbShowLog(self, args, range):
