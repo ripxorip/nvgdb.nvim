@@ -19,8 +19,18 @@ class NvGdb(object):
         self.curr_file = ''
         self.curr_line = 0
 
+        self.sign_id = -1
+
     def async_set_fpos(self):
         self.nvim.command('e +' + str(self.curr_line) + ' ' + self.curr_file)
+        if self.sign_id != -1:
+            self.nvim.call('sign_unplace', 'NvGdb',
+                          {'id': self.sign_id, 'fname': self.curr_file})
+        # Update sign, TODO cont here..
+        self.nvim.call('sign_define', 'curr_pc',
+                {'text': '▶'})
+        self.nvim.call('sign_place', 5000, 'NvGdb', 'curr_pc', self.curr_file, {'lnum': self.curr_line, 'priority': 20})
+        self.sign_id = 5000
 
     def handle_bp_hit(self, fname, line):
         self.curr_file = fname
