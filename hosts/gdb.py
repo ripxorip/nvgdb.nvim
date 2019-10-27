@@ -11,15 +11,27 @@ class NvGdb(object):
         self.pwd = gdb.execute('pwd', to_string=True)
         self.pwd = self.pwd.split()[2][:-1]
 
+    def get_breakpoints(self):
+        bps = gdb.breakpoints()
+        bps_list = []
+        for b in bps:
+            if b.enabled:
+                bps_list.append(b.location)
+        return bps_list
+
     def toggle_breakpoint(self, currentFile, currentLine):
         bps = gdb.breakpoints()
-        currentFile = currentFile.replace(self.pwd+'/', '')
         currentFile = currentFile + ':' + str(currentLine)
-        print(currentFile)
-        # FIXME implement toggling of breakpoint.. cont here
+        currentBp = None
         for b in bps:
-            print(b.location)
-        return {'active': True}
+            if currentFile == b.location:
+                currentBp = b
+        if currentBp != None:
+            currentBp.enabled = not currentBp.enabled
+        else:
+            gdb.execute('b ' + currentLine, to_string=True)
+        bps = self.get_breakpoints()
+        return {'breakpoints': bps}
 
     def handle_event(self, msg):
         if msg['type'] == 'toggle_breakpoint':

@@ -34,19 +34,29 @@ class NvGdb(object):
         resp = msgpack.unpackb(raw_resp, raw=False)
         return resp
 
+    def update_bp_signs(self, bps):
+        self.nvim.call('sign_unplace', 'nvgdb_bps')
+        for b in self.nvim.buffers:
+            for bp in bps:
+                if b.name in bp:
+                    line = int(bp.split(':')[1])
+                    self.nvim.call('sign_place', 0, 'nvgdb_bps', 'bp', b,
+                        {'lnum': line, 'priority': 10})
+
     def toggle_breakpoint(self, f, l):
         ret = self.gdb_post({'type': 'toggle_breakpoint', 'file':f, 'line':l})
-        # FIXME paint margin depending on if breakpoint it set or not
-        self.log(ret)
+        self.update_bp_signs(ret['breakpoints'])
 
     def async_set_fpos(self):
         self.nvim.command('e +' + str(self.curr_line) + ' ' + self.curr_file)
         if self.sign_id != -1:
             self.nvim.call('sign_unplace', 'NvGdb',
                           {'id': self.sign_id, 'fname': self.curr_file})
-        # Update sign, TODO cont here..
+        # These shall be set in the beginning
         self.nvim.call('sign_define', 'curr_pc',
                 {'text': '▶'})
+        self.nvim.call('sign_define', 'bp',
+                {'text': '●'})
         self.nvim.call('sign_place', 5000, 'NvGdb', 'curr_pc', self.curr_file, {'lnum': self.curr_line, 'priority': 20})
         self.sign_id = 5000
 
