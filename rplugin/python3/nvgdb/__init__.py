@@ -26,7 +26,14 @@ class NvGdbWrapper(object):
 
     @neovim.command("NvGdbStop", range='', nargs='*', sync=True)
     def NvGdbStop(self, args, range):
-        self.ng.dummy_send()
+        pass
+
+    @neovim.command("NvGdbToggleBreakpoint", range='', nargs='*', sync=True)
+    def NvGdbToggleBreakpoint(self, args, range):
+        # Get current line and file
+        currentLine = self.nvim.command_output('echo line(".")')
+        currentFile = self.nvim.command_output('echo expand("%:p")')
+        self.ng.toggle_breakpoint(currentFile, currentLine)
 
     @neovim.command("NvGdbShowLog", range='', nargs='*', sync=True)
     def NvGdbShowLog(self, args, range):

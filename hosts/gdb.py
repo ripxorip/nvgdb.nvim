@@ -8,10 +8,24 @@ import threading
 class NvGdb(object):
     def __init__(self):
         self.nvim_socket_connected = False
+        self.pwd = gdb.execute('pwd', to_string=True)
+        self.pwd = self.pwd.split()[2][:-1]
+
+    def toggle_breakpoint(self, currentFile, currentLine):
+        bps = gdb.breakpoints()
+        currentFile = currentFile.replace(self.pwd+'/', '')
+        currentFile = currentFile + ':' + str(currentLine)
+        print(currentFile)
+        # FIXME implement toggling of breakpoint.. cont here
+        for b in bps:
+            print(b.location)
+        return {'active': True}
 
     def handle_event(self, msg):
-        print(msg)
-        return {'status': True}
+        if msg['type'] == 'toggle_breakpoint':
+            return self.toggle_breakpoint(msg['file'], msg['line'])
+        else:
+            return {'status': True}
 
     def serve(self):
         context = zmq.Context()

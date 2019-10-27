@@ -34,6 +34,11 @@ class NvGdb(object):
         resp = msgpack.unpackb(raw_resp, raw=False)
         return resp
 
+    def toggle_breakpoint(self, f, l):
+        ret = self.gdb_post({'type': 'toggle_breakpoint', 'file':f, 'line':l})
+        # FIXME paint margin depending on if breakpoint it set or not
+        self.log(ret)
+
     def async_set_fpos(self):
         self.nvim.command('e +' + str(self.curr_line) + ' ' + self.curr_file)
         if self.sign_id != -1:
@@ -45,14 +50,10 @@ class NvGdb(object):
         self.nvim.call('sign_place', 5000, 'NvGdb', 'curr_pc', self.curr_file, {'lnum': self.curr_line, 'priority': 20})
         self.sign_id = 5000
 
-    def dummy_send(self):
-        self.gdb_post({'hello': 'from the outside'})
-
     def handle_bp_hit(self, fname, line):
         self.curr_file = fname
         self.curr_line = line
         self.nvim.async_call(self.async_set_fpos)
-        self.gdb_post({'auto': 'matic'})
 
     def serve(self):
         context = zmq.Context()
