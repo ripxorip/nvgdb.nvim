@@ -94,6 +94,17 @@ class NvGdb(object):
     def get_log(self):
         return self.logstr
 
+    def stop(self):
+        self.log('stop')
+
+    def resume(self):
+        self.log('resume')
+
+    def single_step(self):
+        self.log('single_step')
+
+    def step_over(self):
+        self.log('step_over')
 
 # Unittest
 if __name__ == '__main__':

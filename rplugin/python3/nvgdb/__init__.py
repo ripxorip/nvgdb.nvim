@@ -35,6 +35,22 @@ class NvGdbWrapper(object):
         currentFile = self.nvim.command_output('echo expand("%:p")')
         self.ng.toggle_breakpoint(currentFile, currentLine)
 
+    @neovim.command("NvGdbSingleStep", range='', nargs='*', sync=True)
+    def NvGdbSingleStep(self, args, range):
+        self.ng.single_step()
+
+    @neovim.command("NvGdbStepOver", range='', nargs='*', sync=True)
+    def NvGdbStepOver(self, args, range):
+        self.ng.step_over()
+
+    @neovim.command("NvGdbStop", range='', nargs='*', sync=True)
+    def NvGdbStop(self, args, range):
+        self.ng.stop()
+
+    @neovim.command("NvGdbResume", range='', nargs='*', sync=True)
+    def NvGdbResume(self, args, range):
+        self.ng.resume()
+
     @neovim.command("NvGdbShowLog", range='', nargs='*', sync=True)
     def NvGdbShowLog(self, args, range):
         """ Show the R2Nvim log
