@@ -15,11 +15,24 @@ class NvGdb(object):
         self.nvim = nvim
         self.logstr = []
         self.logstr.append('== NvGdb debug log ==')
+        self.gdb_socket_connected = False
 
         self.curr_file = ''
         self.curr_line = 0
 
         self.sign_id = -1
+
+    def gdb_post(self, msg):
+        if self.gdb_socket_connected is False:
+            context = zmq.Context()
+            self.socket = context.socket(zmq.REQ)
+            self.socket.connect("tcp://localhost:8765")
+            self.gdb_socket_connected = True
+        msg_data = msgpack.packb(msg, use_bin_type=True)
+        self.socket.send(msg_data)
+        raw_resp = self.socket.recv()
+        resp = msgpack.unpackb(raw_resp, raw=False)
+        return resp
 
     def async_set_fpos(self):
         self.nvim.command('e +' + str(self.curr_line) + ' ' + self.curr_file)
@@ -32,10 +45,14 @@ class NvGdb(object):
         self.nvim.call('sign_place', 5000, 'NvGdb', 'curr_pc', self.curr_file, {'lnum': self.curr_line, 'priority': 20})
         self.sign_id = 5000
 
+    def dummy_send(self):
+        self.gdb_post({'hello': 'from the outside'})
+
     def handle_bp_hit(self, fname, line):
         self.curr_file = fname
         self.curr_line = line
         self.nvim.async_call(self.async_set_fpos)
+        self.gdb_post({'auto': 'matic'})
 
     def serve(self):
         context = zmq.Context()
@@ -43,16 +60,14 @@ class NvGdb(object):
         socket.bind("tcp://*:5678")
         while True:
             raw = socket.recv()
-
             msg = msgpack.unpackb(raw, raw=False)
-            self.log(msg)
-            if msg['type'] == 'bp_hit':
-                self.handle_bp_hit(msg['file'], msg['line'])
-
-            socket.send(msgpack.packb({'status': True}, use_bin_type=True))
+            ret = self.handle_event(msg)
+            socket.send(msgpack.packb(ret, use_bin_type=True))
 
     def handle_event(self, msg):
-        self.log(msg.decode())
+        if msg['type'] == 'bp_hit':
+            self.handle_bp_hit(msg['file'], msg['line'])
+        return {'status': True}
 
     def log(self, s):
         s = str(s)

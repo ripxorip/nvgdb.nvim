@@ -26,7 +26,7 @@ class NvGdbWrapper(object):
 
     @neovim.command("NvGdbStop", range='', nargs='*', sync=True)
     def NvGdbStop(self, args, range):
-        pass
+        self.ng.dummy_send()
 
     @neovim.command("NvGdbShowLog", range='', nargs='*', sync=True)
     def NvGdbShowLog(self, args, range):
