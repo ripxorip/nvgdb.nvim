@@ -4,6 +4,11 @@ import zmq
 import msgpack
 import threading
 
+class GdbEvent():
+    def __init__(self, cmd):
+        self.cmd = cmd;
+    def __call__(self):
+        gdb.execute(self.cmd, to_string=True)
 
 class NvGdb(object):
     def __init__(self):
@@ -33,9 +38,31 @@ class NvGdb(object):
         bps = self.get_breakpoints()
         return {'breakpoints': bps}
 
+    def event_get_breakpoints(self):
+        bps = self.get_breakpoints()
+        return {'breakpoints': bps}
+
     def handle_event(self, msg):
         if msg['type'] == 'toggle_breakpoint':
             return self.toggle_breakpoint(msg['file'], msg['line'])
+        elif msg['type'] == 'stop':
+            # FIXME How to implement this?
+            gdb.post_event(GdbEvent('c'))
+            return {'status': True}
+        elif msg['type'] == 'resume':
+            gdb.post_event(GdbEvent('c'))
+            return {'status': True}
+        elif msg['type'] == 'step':
+            gdb.post_event(GdbEvent('s'))
+            return {'status': True}
+        elif msg['type'] == 'over':
+            gdb.post_event(GdbEvent('n'))
+            return {'status': True}
+        elif msg['type'] == 'reset':
+            gdb.post_event(GdbEvent('r'))
+            return {'status': True}
+        elif msg['type'] == 'get_breakpoints':
+            return self.event_get_breakpoints()
         else:
             return {'status': True}
 

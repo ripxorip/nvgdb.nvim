@@ -24,10 +24,6 @@ class NvGdbWrapper(object):
         t = threading.Thread(target=self.server_wrapper, daemon=True)
         t.start()
 
-    @neovim.command("NvGdbStop", range='', nargs='*', sync=True)
-    def NvGdbStop(self, args, range):
-        pass
-
     @neovim.command("NvGdbToggleBreakpoint", range='', nargs='*', sync=True)
     def NvGdbToggleBreakpoint(self, args, range):
         # Get current line and file
@@ -50,6 +46,14 @@ class NvGdbWrapper(object):
     @neovim.command("NvGdbResume", range='', nargs='*', sync=True)
     def NvGdbResume(self, args, range):
         self.ng.resume()
+
+    @neovim.command("NvGdbReset", range='', nargs='*', sync=True)
+    def NvGdbReset(self, args, range):
+        self.ng.reset()
+
+    @neovim.command("NvGdbRefreshBreakpoints", range='', nargs='*', sync=True)
+    def NvGdbRefreshBreakpoints(self, args, range):
+        self.ng.refresh_breakpoints()
 
     @neovim.command("NvGdbShowLog", range='', nargs='*', sync=True)
     def NvGdbShowLog(self, args, range):

@@ -22,6 +22,18 @@ class NvGdb(object):
 
         self.sign_id = -1
 
+    def socket_communicate(self, data):
+        self.socket.send(data)
+        numb = self.socket.poll(200)
+        if 0 == numb:
+            # FIXME, Add more error handling?
+            self.socket.close(linger=True)
+            self.gdb_socket_connected = False
+            return None
+        else:
+            raw_resp = self.socket.recv()
+            return raw_resp
+
     def gdb_post(self, msg):
         if self.gdb_socket_connected is False:
             context = zmq.Context()
@@ -29,9 +41,11 @@ class NvGdb(object):
             self.socket.connect("tcp://localhost:8765")
             self.gdb_socket_connected = True
         msg_data = msgpack.packb(msg, use_bin_type=True)
-        self.socket.send(msg_data)
-        raw_resp = self.socket.recv()
-        resp = msgpack.unpackb(raw_resp, raw=False)
+        raw_resp = self.socket_communicate(msg_data)
+        if raw_resp != None:
+            resp = msgpack.unpackb(raw_resp, raw=False)
+        else:
+            resp = None
         return resp
 
     def update_bp_signs(self, bps):
@@ -42,10 +56,6 @@ class NvGdb(object):
                     line = int(bp.split(':')[1])
                     self.nvim.call('sign_place', 0, 'nvgdb_bps', 'bp', b,
                         {'lnum': line, 'priority': 10})
-
-    def toggle_breakpoint(self, f, l):
-        ret = self.gdb_post({'type': 'toggle_breakpoint', 'file':f, 'line':l})
-        self.update_bp_signs(ret['breakpoints'])
 
     def async_set_fpos(self):
         self.nvim.command('e +' + str(self.curr_line) + ' ' + self.curr_file)
@@ -94,17 +104,34 @@ class NvGdb(object):
     def get_log(self):
         return self.logstr
 
+    #########################
+    # Commands implementation
+    #########################
+
+    def toggle_breakpoint(self, f, l):
+        ret = self.gdb_post({'type': 'toggle_breakpoint', 'file':f, 'line':l})
+        if ret != None:
+            self.update_bp_signs(ret['breakpoints'])
+
     def stop(self):
-        self.log('stop')
+        ret = self.gdb_post({'type': 'stop'})
 
     def resume(self):
-        self.log('resume')
+        ret = self.gdb_post({'type': 'resume'})
 
     def single_step(self):
-        self.log('single_step')
+        ret = self.gdb_post({'type': 'step'})
 
     def step_over(self):
-        self.log('step_over')
+        ret = self.gdb_post({'type': 'over'})
+
+    def reset(self):
+        ret = self.gdb_post({'type': 'reset'})
+
+    def refresh_breakpoints(self):
+        ret = self.gdb_post({'type': 'get_breakpoints'})
+        if ret != None:
+            self.update_bp_signs(ret['breakpoints'])
 
 # Unittest
 if __name__ == '__main__':
@@ -118,4 +145,8 @@ if __name__ == '__main__':
 
     nv = nvim_mockup()
     ng = NvGdb(nv, dbg_print=True)
-    ng.serve()
+    print("here")
+    ng.gdb_post({'type': 'over'})
+    print('After post')
+    ng.gdb_post({'type': 'over'})
+    print('After post')

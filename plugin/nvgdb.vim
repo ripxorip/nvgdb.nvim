@@ -10,3 +10,6 @@ nnoremap <silent> <Plug>(NvGdbSingleStep) :NvGdbSingleStep<Return>
 nnoremap <silent> <Plug>(NvGdbStepOver) :NvGdbStepOver<Return>
 nnoremap <silent> <Plug>(NvGdbResume) :NvGdbResume<Return>
 nnoremap <silent> <Plug>(NvGdbStop) :NvGdbStop<Return>
+
+nnoremap <silent> <Plug>(NvGdbReset) :NvGdbReset<Return>
+nnoremap <silent> <Plug>(NvGdbRefreshBreakpoints) :NvGdbRefreshBreakpoints<Return>
