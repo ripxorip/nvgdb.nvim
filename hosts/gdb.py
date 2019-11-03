@@ -5,15 +5,33 @@ import msgpack
 import threading
 
 class GdbEvent():
-    def __init__(self, cmd):
+    def __init__(self, cmd, callback=None, callback_data=None):
         self.cmd = cmd;
+        self.callback = callback
+        self.callback_data = callback_data
     def __call__(self):
-        gdb.execute(self.cmd, to_string=True)
+        if self.callback != None:
+            ret = gdb.execute(self.cmd, to_string=True)
+            # Post the event
+            if self.callback_data == 'eval_word_callback':
+                # Filter out dollar sign
+                a_ret = ret.split('\n')
+                first_line_filt = re.findall(r'= (.*)', a_ret[0])[0]
+                out_str = first_line_filt
+                for i in range(1, len(a_ret)):
+                    if a_ret[i] != '':
+                        out_str += '\n' + a_ret[i]
+                ret = out_str
+            cbk_data = {'type': self.callback_data, 'data': str(ret)}
+            self.callback(cbk_data)
+        else:
+            gdb.execute(self.cmd, to_string=True)
 
 class NvGdb(object):
     def __init__(self):
         self.nvim_socket_connected = False
         self.pwd = gdb.execute('pwd', to_string=True)
+        gdb.execute('set print pretty on', to_string=True)
         self.pwd = self.pwd.split()[2][:-1]
 
     def get_breakpoints(self):
@@ -63,6 +81,9 @@ class NvGdb(object):
             return {'status': True}
         elif msg['type'] == 'get_breakpoints':
             return self.event_get_breakpoints()
+        elif msg['type'] == 'eval_word':
+            gdb.post_event(GdbEvent('p ' + msg['word'], callback=self.nvim_post, callback_data='eval_word_callback'))
+            return {'status': 'wait_for_callback'}
         else:
             return {'status': True}
 

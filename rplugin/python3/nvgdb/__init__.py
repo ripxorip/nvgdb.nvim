@@ -55,6 +55,10 @@ class NvGdbWrapper(object):
     def NvGdbRefreshBreakpoints(self, args, range):
         self.ng.refresh_breakpoints()
 
+    @neovim.command("NvGdbEvalWord", range='', nargs='*', sync=True)
+    def NvGdbEvalWord(self, args, range):
+        self.ng.eval_word()
+
     @neovim.command("NvGdbShowLog", range='', nargs='*', sync=True)
     def NvGdbShowLog(self, args, range):
         """ Show the R2Nvim log

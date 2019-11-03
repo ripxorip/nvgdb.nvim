@@ -70,6 +70,12 @@ class NvGdb(object):
         self.nvim.call('sign_place', 5000, 'NvGdb', 'curr_pc', self.curr_file, {'lnum': self.curr_line, 'priority': 20})
         self.sign_id = 5000
 
+    def async_floating_window(self):
+        lines = self.floating_window_text.split('\n')
+        height = len(lines)
+        width = max(len(x) for x in lines)
+        self.nvim.call('NvGdbFloatingWindow', lines, width, height)
+
     def handle_bp_hit(self, fname, line):
         self.curr_file = fname
         self.curr_line = line
@@ -88,6 +94,9 @@ class NvGdb(object):
     def handle_event(self, msg):
         if msg['type'] == 'bp_hit':
             self.handle_bp_hit(msg['file'], msg['line'])
+        elif msg['type'] == 'eval_word_callback':
+            self.floating_window_text = str(msg['data'])
+            self.nvim.async_call(self.async_floating_window)
         return {'status': True}
 
     def log(self, s):
@@ -107,6 +116,11 @@ class NvGdb(object):
     #########################
     # Commands implementation
     #########################
+
+    # TO IMPLEMENT (USPs for this plugin)
+    # 1.) Show variable value in floating windows
+    # 2.) Show call stack in quickfix
+    # 3.) radare2 integration??
 
     def toggle_breakpoint(self, f, l):
         ret = self.gdb_post({'type': 'toggle_breakpoint', 'file':f, 'line':l})
@@ -132,6 +146,13 @@ class NvGdb(object):
         ret = self.gdb_post({'type': 'get_breakpoints'})
         if ret != None:
             self.update_bp_signs(ret['breakpoints'])
+
+    def eval_word(self):
+        # Get current word
+        word = self.nvim.eval('expand(\'<cword>\')').strip('\n')
+        ret = self.gdb_post({'type': 'eval_word', 'word': word})
+        if ret != None:
+            self.log(ret)
 
 # Unittest
 if __name__ == '__main__':
