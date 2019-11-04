@@ -81,6 +81,9 @@ class NvGdb(object):
             return {'status': True}
         elif msg['type'] == 'get_breakpoints':
             return self.event_get_breakpoints()
+        elif msg['type'] == 'get_frames_string':
+            ret = gdb.execute('bt', to_string=True)
+            return {'frames_string': ret}
         elif msg['type'] == 'eval_word':
             gdb.post_event(GdbEvent('p ' + msg['word'], callback=self.nvim_post, callback_data='eval_word_callback'))
             return {'status': 'wait_for_callback'}

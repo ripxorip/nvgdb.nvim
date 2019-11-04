@@ -14,6 +14,7 @@ nnoremap <silent> <Plug>(NvGdbStop) :NvGdbStop<Return>
 nnoremap <silent> <Plug>(NvGdbReset) :NvGdbReset<Return>
 nnoremap <silent> <Plug>(NvGdbRefreshBreakpoints) :NvGdbRefreshBreakpoints<Return>
 nnoremap <silent> <Plug>(NvGdbEvalWord) :NvGdbEvalWord<Return>
+nnoremap <silent> <Plug>(NvGdbShowStackTrace) :NvGdbShowStackTrace<Return>
 
 function NvGdbFloatingWindow(inp_str, in_width, in_height)
     let buf = nvim_create_buf(v:false, v:true)

@@ -55,7 +55,7 @@ class NvGdb(object):
                 if b.name in bp:
                     line = int(bp.split(':')[1])
                     self.nvim.call('sign_place', 0, 'nvgdb_bps', 'bp', b,
-                        {'lnum': line, 'priority': 10})
+                        {'lnum': line, 'priority': 10000})
 
     def async_set_fpos(self):
         self.nvim.command('e +' + str(self.curr_line) + ' ' + self.curr_file)
@@ -67,7 +67,7 @@ class NvGdb(object):
                 {'text': '▶'})
         self.nvim.call('sign_define', 'bp',
                 {'text': '●'})
-        self.nvim.call('sign_place', 5000, 'NvGdb', 'curr_pc', self.curr_file, {'lnum': self.curr_line, 'priority': 20})
+        self.nvim.call('sign_place', 5000, 'NvGdb', 'curr_pc', self.curr_file, {'lnum': self.curr_line, 'priority': 10001})
         self.sign_id = 5000
 
     def async_floating_window(self):
@@ -113,13 +113,29 @@ class NvGdb(object):
     def get_log(self):
         return self.logstr
 
+    def spawn_stacktrace_window(self, stacktrace):
+        self.nvim.command('split NvGdbStackTrace')
+        self.nvim.command('setlocal buftype=nofile')
+        self.nvim.command('setlocal filetype=NvGdbStackTrace')
+        self.nvim.command('bp')
+        self.nvim.command('wincmd j')
+        self.nvim.command('bp')
+        wl = 10
+        if len(stacktrace) < 10:
+            wl = len(stacktrace)
+        self.nvim.current.buffer[:] = stacktrace
+        self.nvim.current.window.height = wl
+        self.nvim.command('wincmd k')
+        # Select first frame and go there..
+
     #########################
     # Commands implementation
     #########################
 
     # TO IMPLEMENT (USPs for this plugin)
-    # 1.) Show variable value in floating windows
-    # 2.) Show call stack in quickfix
+    # 1.) Show variable value in floating windows (sort of done..)
+    # 2.) Show call stack in new window and be able to navigate it - (currently working on..)
+    #     - Need auto command to navigate it (move up and down frames..)
     # 3.) radare2 integration??
 
     def toggle_breakpoint(self, f, l):
@@ -153,6 +169,11 @@ class NvGdb(object):
         ret = self.gdb_post({'type': 'eval_word', 'word': word})
         if ret != None:
             self.log(ret)
+
+    def show_stack_trace(self):
+        ret = self.gdb_post({'type': 'get_frames_string'})
+        if ret != None:
+            self.spawn_stacktrace_window(ret['frames_string'].split('\n'))
 
 # Unittest
 if __name__ == '__main__':

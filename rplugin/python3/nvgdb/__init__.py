@@ -59,6 +59,10 @@ class NvGdbWrapper(object):
     def NvGdbEvalWord(self, args, range):
         self.ng.eval_word()
 
+    @neovim.command("NvGdbShowStackTrace", range='', nargs='*', sync=True)
+    def NvGdbShowStackTrace(self, args, range):
+        self.ng.show_stack_trace()
+
     @neovim.command("NvGdbShowLog", range='', nargs='*', sync=True)
     def NvGdbShowLog(self, args, range):
         """ Show the R2Nvim log
