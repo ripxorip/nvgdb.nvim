@@ -32,6 +32,7 @@ class NvGdb(object):
         self.nvim_socket_connected = False
         self.pwd = gdb.execute('pwd', to_string=True)
         gdb.execute('set print pretty on', to_string=True)
+        gdb.execute('set pagination off', to_string=True)
         self.pwd = self.pwd.split()[2][:-1]
 
     def get_breakpoints(self):

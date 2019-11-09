@@ -58,7 +58,11 @@ class NvGdb(object):
                         {'lnum': line, 'priority': 10000})
 
     def async_set_fpos(self):
-        self.nvim.command('e +' + str(self.curr_line) + ' ' + self.curr_file)
+        if (self.curr_file == self.nvim.current.buffer.name):
+            self.nvim.current.window.cursor = [self.curr_line, 0]
+            self.nvim.command('normal! :' + str(self.curr_line))
+        else:
+            self.nvim.command('e +' + str(self.curr_line) + ' ' + self.curr_file)
         if self.sign_id != -1:
             self.nvim.call('sign_unplace', 'NvGdb',
                           {'id': self.sign_id, 'fname': self.curr_file})
