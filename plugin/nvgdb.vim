@@ -25,3 +25,5 @@ function NvGdbFloatingWindow(inp_str, in_width, in_height)
     " optional: change highlight, otherwise Pmenu is used
     " call nvim_win_set_option(win, 'winhl', 'Normal:MyHighlight')
 endfunction
+
+autocmd FileType NvGdbStackTrace nnoremap <buffer> <CR> :NvGdbSelectStackFrame<CR>

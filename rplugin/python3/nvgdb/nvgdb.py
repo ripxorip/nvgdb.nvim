@@ -126,17 +126,32 @@ class NvGdb(object):
         self.nvim.current.buffer[:] = stacktrace
         self.nvim.current.window.height = wl
         self.nvim.command('wincmd k')
-        # Select first frame and go there..
+        self.nvim.command('e +' + str(self.curr_line) + ' ' + self.curr_file)
+        self.nvim.command('wincmd w')
 
     #########################
     # Commands implementation
     #########################
 
-    # TO IMPLEMENT (USPs for this plugin)
-    # 1.) Show variable value in floating windows (sort of done..)
-    # 2.) Show call stack in new window and be able to navigate it - (currently working on..)
-    #     - Need auto command to navigate it (move up and down frames..)
-    # 3.) radare2 integration??
+    # TODOs
+    # * More shortcuts
+    #   - Close floating window
+    #   - Up stack, down stack...
+    # * radare2 integration
+
+    def select_stack_frame_from_stack_window(self):
+        # Get frame from cursor
+        frame_num = int(self.nvim.current.line[1])
+        # Select stack frame in the other window
+        self.select_stack_frame(frame_num)
+
+    def select_stack_frame(self, frame):
+        # Go back to previous window
+        self.nvim.command('wincmd w')
+        # Select frame in gdb and get file with location
+        ret = self.gdb_post({'type': 'select_frame', 'frame': frame})
+        self.nvim.command('e +' + str(ret['line']) + ' ' + ret['file'])
+        self.nvim.command('wincmd w')
 
     def toggle_breakpoint(self, f, l):
         ret = self.gdb_post({'type': 'toggle_breakpoint', 'file':f, 'line':l})
@@ -173,7 +188,12 @@ class NvGdb(object):
     def show_stack_trace(self):
         ret = self.gdb_post({'type': 'get_frames_string'})
         if ret != None:
-            self.spawn_stacktrace_window(ret['frames_string'].split('\n'))
+            ret_split = ret['frames_string'].split('\n')
+            clean_split = []
+            for i in ret_split:
+                if i != '':
+                    clean_split.append(i)
+            self.spawn_stacktrace_window(clean_split)
 
 # Unittest
 if __name__ == '__main__':

@@ -63,6 +63,10 @@ class NvGdbWrapper(object):
     def NvGdbShowStackTrace(self, args, range):
         self.ng.show_stack_trace()
 
+    @neovim.command("NvGdbSelectStackFrame", range='', nargs='*', sync=True)
+    def NvGdbSelectStackFrame(self, args, range):
+        self.ng.select_stack_frame_from_stack_window()
+
     @neovim.command("NvGdbShowLog", range='', nargs='*', sync=True)
     def NvGdbShowLog(self, args, range):
         """ Show the R2Nvim log

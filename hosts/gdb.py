@@ -84,6 +84,13 @@ class NvGdb(object):
         elif msg['type'] == 'get_frames_string':
             ret = gdb.execute('bt', to_string=True)
             return {'frames_string': ret}
+        elif msg['type'] == 'select_frame':
+            gdb.execute('frame ' + str(msg['frame']), to_string=True)
+            sal = gdb.selected_frame().find_sal()
+            nvim_data = {}
+            nvim_data['file'] = sal.symtab.fullname()
+            nvim_data['line'] = sal.line
+            return nvim_data
         elif msg['type'] == 'eval_word':
             gdb.post_event(GdbEvent('p ' + msg['word'], callback=self.nvim_post, callback_data='eval_word_callback'))
             return {'status': 'wait_for_callback'}
